@@ -339,15 +339,11 @@ nav {
     <button class="count-btn active" data-count="1" onclick="setCount(1)">一卦</button>
     <button class="count-btn"        data-count="2" onclick="setCount(2)">二卦</button>
     <button class="count-btn"        data-count="3" onclick="setCount(3)">三卦</button>
-    <button class="count-btn"        data-count="4" onclick="setCount(4)">四卦</button>
-    <button class="count-btn"        data-count="5" onclick="setCount(5)">五卦</button>
   </div>
   <div class="count-desc">
     <span class="cd-label">一卦：</span><span class="cd-text">針對一個問題，直接清晰</span>
     <span class="cd-label">二卦：</span><span class="cd-text">比較兩個選項或兩種可能</span>
     <span class="cd-label">三卦：</span><span class="cd-text">過去因由・現在處境・未來走向</span>
-    <span class="cd-label">四卦：</span><span class="cd-text">直指核心｜問題核心・障礙・對策・優勢</span>
-    <span class="cd-label">五卦：</span><span class="cd-text">感情萬用｜我的狀態・我的態度・對方狀態・對方態度・可能結果</span>
   </div>
   <div class="question-box">
     <label>你想問什麼？（可留空作整體運勢解讀）</label>
@@ -395,15 +391,6 @@ nav {
 
 <script src="cards.js"></script>
 <script>
-// ── Spread definitions ───────────────────────────────────────
-var SPREADS = {
-  1: { name: '單卦',          positions: ['卦象指引'] },
-  2: { name: '二選一',        positions: ['選項甲', '選項乙'] },
-  3: { name: '時間之流',      positions: ['過去因由', '現在處境', '未來走向'] },
-  4: { name: '直指核心',      positions: ['問題核心', '障礙', '對策', '優勢／資源'] },
-  5: { name: '感情萬用牌陣',  positions: ['我的狀態', '我對對方的感情態度', '對方的狀態', '對方對我的感情態度', '可能的結果'] }
-};
-
 // ── Claude API ───────────────────────────────────────────────
 var CLAUDE_API_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM';
 var CLAUDE_API     = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -412,10 +399,8 @@ var CLAUDE_API     = window.location.hostname === 'localhost' || window.location
 var CLAUDE_MODEL   = 'claude-sonnet-4-6-thinking';
 
 function callClaude(question, cards) {
-  var spread   = SPREADS[drawCount] || SPREADS[1];
   var cardLines = cards.map(function (c, i) {
-    var pos = spread.positions[i] ? '【' + spread.positions[i] + '】' : '第' + (i + 1) + '張';
-    return pos + ' 第' + c.num + '卦《' + c.name + '》\n' +
+    return '第' + (i + 1) + '張卦：第' + c.num + '卦《' + c.name + '》\n' +
            '基礎牌義：' + c.lvl1 + '\n' +
            '戀愛運勢：' + c.lvl2 + '\n' +
            '職場財運性格：' + c.lvl3;
@@ -423,12 +408,11 @@ function callClaude(question, cards) {
 
   var prompt =
     '你係一位精通易經塔羅嘅占卜師，請用繁體中文（香港口語書寫）為用戶解讀卦象。\n\n' +
-    '牌陣：' + spread.name + '\n' +
     '用戶問題：' + (question.trim() || '（無特定問題，請作整體運勢解讀）') + '\n\n' +
     '抽到嘅卦象：\n' + cardLines + '\n\n' +
-    '請根據「' + spread.name + '」牌陣嘅結構，針對用戶嘅問題，結合各個位置嘅卦象作出詳細解讀。包括：\n' +
-    '1. 各位置卦象分析（按牌陣位置逐一解說）\n' +
-    '2. 針對問題嘅整體指引\n' +
+    '請針對用戶嘅問題，結合以上卦象作出詳細解讀。包括：\n' +
+    '1. 卦象整體分析\n' +
+    '2. 針對問題嘅具體指引\n' +
     '3. 建議或注意事項\n\n' +
     '語氣輕鬆易明，貼近香港日常用語，唔好太學術化。';
 
@@ -441,7 +425,7 @@ function callClaude(question, cards) {
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 3000,
+      max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }]
     })
   })
@@ -657,8 +641,7 @@ function showReading() {
   var cards = pickedNums.map(function (n) { return CARDS[n - 1]; });
   activeReadIdx = 0;
 
-  var spread = SPREADS[drawCount] || SPREADS[1];
-  document.getElementById('reading-title').textContent    = spread.name === '單卦' ? '今日卦義' : spread.name;
+  document.getElementById('reading-title').textContent    = drawCount === 1 ? '今日卦義' : '多卦解讀（' + drawCount + ' 卦）';
   document.getElementById('reading-subtitle').textContent = cards.map(function (c) { return c.name; }).join(' · ');
 
   // Flip cards
@@ -679,12 +662,9 @@ function showReading() {
       return function () { f.classList.add('flipped'); setActiveReading(i); };
     })(fc, idx);
 
-    var spread = SPREADS[drawCount] || SPREADS[1];
-    var posLabel = spread.positions[idx] || '';
     var label = document.createElement('div');
     label.className   = 'flip-card-label';
-    label.innerHTML   = (posLabel ? '<span style="color:var(--text-dim);font-size:.72rem;display:block;letter-spacing:.08em">' + posLabel + '</span>' : '') +
-                        '第 ' + c.num + ' 卦　' + c.name;
+    label.textContent = '第 ' + c.num + ' 卦　' + c.name;
 
     wrap.appendChild(fc);
     wrap.appendChild(label);
