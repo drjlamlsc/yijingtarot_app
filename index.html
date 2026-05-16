@@ -339,15 +339,11 @@ nav {
     <button class="count-btn active" data-count="1" onclick="setCount(1)">一卦</button>
     <button class="count-btn"        data-count="2" onclick="setCount(2)">二卦</button>
     <button class="count-btn"        data-count="3" onclick="setCount(3)">三卦</button>
-    <button class="count-btn"        data-count="4" onclick="setCount(4)">四卦</button>
-    <button class="count-btn"        data-count="5" onclick="setCount(5)">五卦</button>
   </div>
   <div class="count-desc">
     <span class="cd-label">一卦：</span><span class="cd-text">針對一個問題，直接清晰</span>
     <span class="cd-label">二卦：</span><span class="cd-text">比較兩個選項或兩種可能</span>
     <span class="cd-label">三卦：</span><span class="cd-text">過去因由・現在處境・未來走向</span>
-    <span class="cd-label">四卦：</span><span class="cd-text">直指核心｜問題核心・障礙・對策・資源長處</span>
-    <span class="cd-label">五卦：</span><span class="cd-text">感情萬用｜我的狀態・我的態度・對方狀態・對方態度・可能結果</span>
   </div>
   <div class="question-box">
     <label>你想問什麼？（可留空作整體運勢解讀）</label>
@@ -396,28 +392,15 @@ nav {
 <script src="cards.js"></script>
 <script>
 // ── Claude API ───────────────────────────────────────────────
-// ── Spread definitions ───────────────────────────────────────
-var SPREADS = {
-  1: { name: '單卦',         positions: ['卦象指引'] },
-  2: { name: '二選一',       positions: ['選項甲', '選項乙'] },
-  3: { name: '時間之流',     positions: ['過去因由', '現在處境', '未來走向'] },
-  4: { name: '直指核心',     positions: ['問題核心', '障礙', '對策', '資源／長處'] },
-  5: { name: '感情萬用牌陣', positions: ['我的狀態', '我對對方的感情態度', '對方的狀態', '對方對我的感情態度', '可能的結果'] }
-};
-
 var CLAUDE_API_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM';
 var CLAUDE_API     = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? '/proxy/claude'                      // local: use server.py proxy
   : 'https://xiaoai.plus/v1/messages';  // production: direct (CORS allowed)
-var CLAUDE_MODEL   = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'claude-sonnet-4-6-thinking'  // localhost proxy: no timeout, thinking OK
-  : 'claude-sonnet-4-6';          // GitHub Pages: non-thinking avoids ERR_CONNECTION_CLOSED
+var CLAUDE_MODEL   = 'claude-sonnet-4-6-thinking';
 
 function callClaude(question, cards) {
-  var spread = SPREADS[drawCount] || SPREADS[1];
   var cardLines = cards.map(function (c, i) {
-    var pos = spread.positions[i] ? '【' + spread.positions[i] + '】' : '第' + (i + 1) + '張';
-    return pos + ' 第' + c.num + '卦《' + c.name + '》\n' +
+    return '第' + (i + 1) + '張卦：第' + c.num + '卦《' + c.name + '》\n' +
            '基礎牌義：' + c.lvl1 + '\n' +
            '戀愛運勢：' + c.lvl2 + '\n' +
            '職場財運性格：' + c.lvl3;
@@ -425,12 +408,11 @@ function callClaude(question, cards) {
 
   var prompt =
     '你係一位精通易經塔羅嘅占卜師，請用繁體中文（香港口語書寫）為用戶解讀卦象。\n\n' +
-    '牌陣：' + spread.name + '\n' +
     '用戶問題：' + (question.trim() || '（無特定問題，請作整體運勢解讀）') + '\n\n' +
     '抽到嘅卦象：\n' + cardLines + '\n\n' +
-    '請根據「' + spread.name + '」牌陣嘅結構，針對用戶嘅問題，結合各個位置嘅卦象作出詳細解讀。包括：\n' +
-    '1. 各位置卦象分析（按牌陣位置逐一解說）\n' +
-    '2. 針對問題嘅整體指引\n' +
+    '請針對用戶嘅問題，結合以上卦象作出詳細解讀。包括：\n' +
+    '1. 卦象整體分析\n' +
+    '2. 針對問題嘅具體指引\n' +
     '3. 建議或注意事項\n\n' +
     '語氣輕鬆易明，貼近香港日常用語，唔好太學術化。';
 
@@ -652,30 +634,6 @@ function resetDraw() {
 }
 
 // ── Reading ───────────────────────────────────────────────────
-function makeFlipWrap(c, idx, posLabel) {
-  var wrap = document.createElement('div');
-  wrap.style.textAlign = 'center';
-  var fc = document.createElement('div');
-  fc.className = 'flip-card';
-  fc.innerHTML =
-    '<div class="flip-card-inner">' +
-      '<div class="flip-face flip-back"><img src="' + backUrl() + '" alt="牌背"></div>' +
-      '<div class="flip-face flip-front"><img src="' + imgUrl(c.imgId, 600) + '" alt="' + c.name + '"></div>' +
-    '</div>';
-  fc.onclick = (function (f, i) {
-    return function () { f.classList.add('flipped'); setActiveReading(i); };
-  })(fc, idx);
-  var label = document.createElement('div');
-  label.className = 'flip-card-label';
-  label.innerHTML = (posLabel
-    ? '<span style="color:var(--text-dim);font-size:.72rem;display:block;letter-spacing:.08em">' + posLabel + '</span>'
-    : '') + '第 ' + c.num + ' 卦　' + c.name;
-  wrap.appendChild(fc);
-  wrap.appendChild(label);
-  setTimeout(function (f) { f.classList.add('flipped'); }.bind(null, fc), 500 + idx * 350);
-  return wrap;
-}
-
 function showReading() {
   document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
   document.getElementById('screen-reading').classList.add('active');
@@ -683,57 +641,47 @@ function showReading() {
   var cards = pickedNums.map(function (n) { return CARDS[n - 1]; });
   activeReadIdx = 0;
 
-  var spread = SPREADS[drawCount] || SPREADS[1];
-  document.getElementById('reading-title').textContent    = spread.name === '單卦' ? '今日卦義' : spread.name;
+  document.getElementById('reading-title').textContent    = drawCount === 1 ? '今日卦義' : '多卦解讀（' + drawCount + ' 卦）';
   document.getElementById('reading-subtitle').textContent = cards.map(function (c) { return c.name; }).join(' · ');
 
-  // Build flip card elements
-  var fcWraps = cards.map(function (c, idx) {
-    return makeFlipWrap(c, idx, spread.positions[idx] || '');
-  });
-
-  // Layout reading cards by spread type
+  // Flip cards
   var cardsEl = document.getElementById('reading-cards');
   cardsEl.innerHTML = '';
-  cardsEl.removeAttribute('style');
+  cards.forEach(function (c, idx) {
+    var wrap = document.createElement('div');
+    wrap.style.textAlign = 'center';
 
-  if (drawCount === 4) {
-    // 直指核心: card 1 top-center, cards 2-4 bottom row
-    cardsEl.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;margin-bottom:32px';
-    cardsEl.appendChild(fcWraps[0]);
-    var row4 = document.createElement('div');
-    row4.style.cssText = 'display:flex;gap:16px;align-items:flex-start';
-    [fcWraps[1], fcWraps[2], fcWraps[3]].forEach(function (w) { row4.appendChild(w); });
-    cardsEl.appendChild(row4);
-  } else if (drawCount === 5) {
-    // 感情萬用: [1][2] →← [3][4] top, [5] centered below
-    cardsEl.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;margin-bottom:32px';
-    var row5 = document.createElement('div');
-    row5.style.cssText = 'display:flex;gap:12px;align-items:flex-start';
-    row5.appendChild(fcWraps[0]);
-    row5.appendChild(fcWraps[1]);
-    var arrowEl = document.createElement('div');
-    arrowEl.style.cssText = 'display:flex;align-items:center;color:var(--text-dim);font-size:1rem;padding:0 4px;margin-top:48px';
-    arrowEl.textContent = '→←';
-    row5.appendChild(arrowEl);
-    row5.appendChild(fcWraps[2]);
-    row5.appendChild(fcWraps[3]);
-    cardsEl.appendChild(row5);
-    cardsEl.appendChild(fcWraps[4]);
-  } else {
-    cardsEl.style.cssText = 'display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px';
-    fcWraps.forEach(function (w) { cardsEl.appendChild(w); });
-  }
+    var fc = document.createElement('div');
+    fc.className = 'flip-card';
+    fc.innerHTML =
+      '<div class="flip-card-inner">' +
+        '<div class="flip-face flip-back"><img src="' + backUrl() + '" alt="牌背"></div>' +
+        '<div class="flip-face flip-front"><img src="' + imgUrl(c.imgId, 600) + '" alt="' + c.name + '"></div>' +
+      '</div>';
+    fc.onclick = (function (f, i) {
+      return function () { f.classList.add('flipped'); setActiveReading(i); };
+    })(fc, idx);
+
+    var label = document.createElement('div');
+    label.className   = 'flip-card-label';
+    label.textContent = '第 ' + c.num + ' 卦　' + c.name;
+
+    wrap.appendChild(fc);
+    wrap.appendChild(label);
+    cardsEl.appendChild(wrap);
+
+    // Staggered auto-flip
+    setTimeout(function (f) { f.classList.add('flipped'); }.bind(null, fc), 500 + idx * 350);
+  });
 
   // Tabs (multi-card only)
   var tabsEl = document.getElementById('card-tabs');
   tabsEl.innerHTML = '';
   if (cards.length > 1) {
     cards.forEach(function (c, idx) {
-      var pos = spread.positions[idx] ? spread.positions[idx] + '：' : '';
       var btn = document.createElement('button');
       btn.className = 'card-tab' + (idx === 0 ? ' active' : '');
-      btn.textContent = pos + c.name;
+      btn.textContent = '第 ' + (idx + 1) + ' 卦：' + c.name;
       btn.onclick = (function (i) { return function () { setActiveReading(i); }; })(idx);
       tabsEl.appendChild(btn);
     });
@@ -842,7 +790,7 @@ function shuffle(arr) {
 }
 </script>
 <footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
-  v1.1.0 &nbsp;·&nbsp; 2026-05-16 15:30
+  v1.0.0 &nbsp;·&nbsp; 2026-05-16 14:00
 </footer>
 </body>
 </html>
