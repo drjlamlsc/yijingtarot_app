@@ -375,7 +375,9 @@ nav {
 <script>
 // ── Claude API ───────────────────────────────────────────────
 var CLAUDE_API_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM';
-var CLAUDE_API     = '/proxy/claude';  // proxied by server.js to avoid CORS
+var CLAUDE_API     = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? '/proxy/claude'                      // local: use server.py proxy
+  : 'https://xiaoai.plus/v1/messages';  // production: direct (CORS allowed)
 var CLAUDE_MODEL   = 'claude-sonnet-4-6-thinking';
 
 function callClaude(question, cards) {
