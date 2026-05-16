@@ -77,6 +77,15 @@ nav {
 .draw-header h2 { font-size: 1.4rem; color: var(--gold); letter-spacing: .25em; margin-bottom: 8px; }
 .draw-header p  { color: var(--text-dim); font-size: .9rem; }
 .count-selector { display: flex; gap: 12px; margin-bottom: 32px; }
+.count-desc {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: -18px; margin-bottom: 20px;
+  text-align: center;
+}
+.count-desc span {
+  font-size: .78rem; color: var(--text-dim); letter-spacing: .06em;
+}
+
 .count-btn {
   width: 56px; height: 56px; border-radius: 50%;
   border: 2px solid rgba(201,168,76,0.4); background: transparent;
@@ -326,6 +335,11 @@ nav {
     <button class="count-btn active" data-count="1" onclick="setCount(1)">一卦</button>
     <button class="count-btn"        data-count="2" onclick="setCount(2)">二卦</button>
     <button class="count-btn"        data-count="3" onclick="setCount(3)">三卦</button>
+  </div>
+  <div class="count-desc">
+    <span>一卦：針對一個問題，直接清晰</span>
+    <span>二卦：比較兩個選項或兩種可能</span>
+    <span>三卦：過去因由・現在處境・未來走向</span>
   </div>
   <div class="question-box">
     <label>你想問什麼？（可留空作整體運勢解讀）</label>
