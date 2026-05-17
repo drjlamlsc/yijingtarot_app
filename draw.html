@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>易經塔羅 · 抽卦</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold:    #c9a84c;
+  --gold-lt: #e8d08a;
+  --dark:    #0d0b14;
+  --dark2:   #16122a;
+  --dark3:   #1e1a35;
+  --purple:  #2e2060;
+  --text:    #e8dfc8;
+  --text-dim:#a09070;
+  --card-w:  110px;
+  --card-h:  170px;
+}
+html, body { height: 100%; background: var(--dark); color: var(--text); font-family: 'Noto Serif TC', 'Source Han Serif TC', 'STSong', serif; overflow-x: hidden; }
+
+/* ── Nav ── */
+nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: linear-gradient(180deg, #0a0818 0%, rgba(10,8,24,0) 100%); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(201,168,76,0.2); }
+.nav-title { font-size: 1.3rem; letter-spacing: .25em; color: var(--gold); text-shadow: 0 0 18px rgba(201,168,76,0.6); }
+.nav-tabs  { display: flex; gap: 6px; }
+.tab-btn { padding: 8px 18px; border: 1px solid rgba(201,168,76,0.35); border-radius: 20px; background: transparent; color: var(--text-dim); font-family: inherit; font-size: .9rem; cursor: pointer; letter-spacing: .1em; transition: all .25s; text-decoration: none; }
+.tab-btn.active, .tab-btn:hover { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold-lt); }
+
+/* ── Screens ── */
+.screen { display: none; padding: 24px 20px 80px; }
+.screen.active { display: block; }
+#screen-draw.active { display: flex; flex-direction: column; align-items: center; }
+
+/* ── Draw ── */
+.draw-header { text-align: center; margin-bottom: 24px; }
+.draw-header h2 { font-size: 1.4rem; color: var(--gold); letter-spacing: .25em; margin-bottom: 8px; }
+.draw-header p  { color: var(--text-dim); font-size: .9rem; }
+.count-selector { display: flex; gap: 12px; margin-bottom: 32px; }
+.count-desc { display: grid; grid-template-columns: max-content 1fr; row-gap: 4px; column-gap: 0; margin-top: -18px; margin-bottom: 20px; }
+.cd-label { font-size: .78rem; color: var(--text-dim); letter-spacing: .06em; white-space: nowrap; }
+.cd-text  { font-size: .78rem; color: var(--text-dim); letter-spacing: .06em; }
+.count-btn { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(201,168,76,0.4); background: transparent; color: var(--gold-lt); font-family: inherit; font-size: 1.1rem; cursor: pointer; transition: all .2s; }
+.count-btn.active, .count-btn:hover { background: rgba(201,168,76,0.2); border-color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.3); }
+
+/* ── Question box ── */
+.question-box { width: 100%; max-width: 560px; margin-bottom: 10px; }
+.question-box label { display: block; font-size: .8rem; color: var(--text-dim); letter-spacing: .15em; margin-bottom: 8px; }
+.question-box textarea { width: 100%; min-height: 90px; background: var(--dark2); border: 1px solid rgba(201,168,76,0.3); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: inherit; font-size: .95rem; line-height: 1.7; resize: vertical; transition: border-color .2s; }
+.question-box textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.15); }
+.question-box textarea::placeholder { color: var(--text-dim); }
+
+/* ── Fan ── */
+.fan-area { position: relative; width: 100%; max-width: 1100px; height: 480px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 8px; overflow: visible; }
+.fan-card { position: absolute; width: 72px; height: 112px; border-radius: 7px; overflow: hidden; cursor: pointer; transform-origin: bottom center; transition: transform .5s cubic-bezier(.34,1.56,.64,1), box-shadow .3s; border: 1px solid rgba(201,168,76,0.4); background: var(--dark3); }
+.fan-card img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.fan-card.selected { border-color: var(--gold); box-shadow: 0 0 28px rgba(201,168,76,0.9); filter: brightness(1.15); }
+.fan-card.picked   { cursor: default; opacity: 0.35; pointer-events: none; }
+.fan-card:hover:not(.picked):not(.selected) { box-shadow: 0 0 20px rgba(201,168,76,0.5); z-index: 50 !important; }
+.fan-instruction { color: var(--text-dim); font-size: .9rem; letter-spacing: .1em; margin-top: -24px; margin-bottom: 14px; text-align: center; min-height: 1.5em; }
+.draw-action-btn { padding: 12px 36px; border-radius: 24px; border: 1px solid var(--gold); background: rgba(201,168,76,0.15); color: var(--gold-lt); font-family: inherit; font-size: 1rem; letter-spacing: .15em; cursor: pointer; transition: all .2s; }
+.draw-action-btn:hover { background: rgba(201,168,76,0.3); box-shadow: 0 0 20px rgba(201,168,76,0.4); }
+
+/* ── Reading ── */
+#screen-reading { max-width: 700px; margin: 0 auto; }
+.reading-header { text-align: center; margin-bottom: 32px; }
+.reading-header h2 { font-size: 1.3rem; color: var(--gold); letter-spacing: .2em; margin-bottom: 6px; }
+.reading-header p  { color: var(--text-dim); font-size: .85rem; }
+.reading-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+.flip-card { width: var(--card-w); height: var(--card-h); perspective: 800px; cursor: pointer; }
+.flip-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.4,0,.2,1); border-radius: 10px; }
+.flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+.flip-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 10px; overflow: hidden; border: 1px solid rgba(201,168,76,0.35); background: var(--dark3); }
+.flip-front { transform: rotateY(180deg); }
+.flip-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.flip-card-label { text-align: center; margin-top: 8px; font-size: .85rem; color: var(--gold-lt); letter-spacing: .1em; }
+.reading-detail { background: var(--dark2); border: 1px solid rgba(201,168,76,0.25); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.reading-detail-header { background: linear-gradient(135deg, var(--purple), var(--dark3)); padding: 18px 24px; border-bottom: 1px solid rgba(201,168,76,0.2); }
+.card-num  { font-size: .75rem; color: var(--text-dim); letter-spacing: .2em; margin-bottom: 4px; }
+.card-name { font-size: 2rem; color: var(--gold); letter-spacing: .3em; }
+.reading-sections { padding: 20px 24px; }
+.reading-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.reading-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.section-tag { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: .7rem; letter-spacing: .15em; margin-bottom: 8px; border: 1px solid; }
+.tag-lvl1 { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); }
+.tag-lvl2 { border-color: #e87dc0; color: #e87dc0; background: rgba(232,125,192,0.1); }
+.tag-lvl3 { border-color: #7dc8e8; color: #7dc8e8; background: rgba(125,200,232,0.1); }
+.section-text { font-size: .92rem; line-height: 1.8; color: var(--text); }
+.card-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.card-tab { padding: 6px 16px; border-radius: 16px; border: 1px solid rgba(201,168,76,0.3); background: transparent; color: var(--text-dim); font-family: inherit; font-size: .85rem; cursor: pointer; letter-spacing: .08em; transition: all .2s; }
+.card-tab.active { border-color: var(--gold); background: rgba(201,168,76,0.15); color: var(--gold-lt); }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; background: transparent; color: var(--text-dim); font-family: inherit; font-size: .85rem; cursor: pointer; transition: all .2s; margin-bottom: 24px; }
+.back-btn:hover { color: var(--gold-lt); border-color: var(--gold); }
+
+/* ── AI section ── */
+.ai-section { background: var(--dark2); border: 1px solid rgba(201,168,76,0.2); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.ai-section-header { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #1a0e35, var(--dark3)); padding: 14px 20px; border-bottom: 1px solid rgba(201,168,76,0.15); }
+.ai-badge { font-size: .65rem; letter-spacing: .15em; padding: 3px 10px; border-radius: 10px; background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.4); color: var(--gold); }
+.ai-section-header .ai-title { font-size: 1rem; color: var(--gold-lt); letter-spacing: .1em; }
+.ai-question { font-size: .8rem; color: var(--text-dim); padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); font-style: italic; }
+.ai-body { padding: 18px 20px; }
+.ai-body .spinner { margin: 20px auto; }
+.ai-text { font-size: .95rem; line-height: 2; color: var(--text); }
+
+/* ── Chat section ── */
+.chat-section { background: var(--dark2); border: 1px solid rgba(201,168,76,0.2); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.chat-header { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #1a0e35, var(--dark3)); padding: 14px 20px; border-bottom: 1px solid rgba(201,168,76,0.15); }
+.chat-header .chat-title { font-size: 1rem; color: var(--gold-lt); letter-spacing: .1em; }
+.chat-messages { padding: 16px 20px; max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.chat-bubble { max-width: 88%; padding: 10px 14px; border-radius: 12px; font-size: .9rem; line-height: 1.75; word-break: break-word; }
+.chat-bubble.user { background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); color: var(--gold-lt); align-self: flex-end; border-radius: 12px 12px 2px 12px; }
+.chat-bubble.assistant { background: var(--dark3); border: 1px solid rgba(255,255,255,0.07); color: var(--text); align-self: flex-start; border-radius: 12px 12px 12px 2px; }
+.chat-input-row { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.07); align-items: flex-end; }
+.chat-input-row textarea { flex: 1; background: var(--dark); border: 1px solid rgba(201,168,76,0.25); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: inherit; font-size: .9rem; line-height: 1.5; resize: none; height: 52px; transition: border-color .2s; }
+.chat-input-row textarea:focus { outline: none; border-color: var(--gold); }
+.chat-input-row textarea::placeholder { color: var(--text-dim); }
+.chat-send-btn { padding: 0 18px; height: 52px; border-radius: 8px; border: 1px solid var(--gold); background: rgba(201,168,76,0.15); color: var(--gold-lt); font-family: inherit; font-size: .88rem; cursor: pointer; transition: all .2s; white-space: nowrap; }
+.chat-send-btn:hover:not(:disabled) { background: rgba(201,168,76,0.3); }
+.chat-send-btn:disabled { opacity: .4; cursor: default; }
+
+/* ── Modal ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--dark2); border: 1px solid rgba(201,168,76,0.4); border-radius: 16px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; animation: modalIn .25s ease; }
+@keyframes modalIn { from { opacity:0; transform:scale(.92); } to { opacity:1; transform:scale(1); } }
+.modal-card-row { display: flex; gap: 20px; padding: 20px 24px 0; align-items: flex-start; }
+.modal-img { width: 90px; height: 138px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(201,168,76,0.3); background: var(--dark3); }
+.modal-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.modal-card-num  { font-size: .7rem; color: var(--text-dim); letter-spacing: .2em; }
+.modal-card-name { font-size: 2.2rem; color: var(--gold); letter-spacing: .3em; margin: 4px 0 8px; }
+.modal-close { position: absolute; top: 14px; right: 18px; background: none; border: none; font-size: 1.4rem; color: var(--text-dim); cursor: pointer; }
+.modal-close:hover { color: var(--gold); }
+.modal-sections { padding: 16px 24px 24px; }
+
+/* ── Spinner ── */
+.spinner { width: 36px; height: 36px; border: 3px solid rgba(201,168,76,0.2); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; margin: 40px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ── */
+@media (max-width: 900px) { .fan-area { max-width: 100%; } .ai-section, .reading-detail, .chat-section { font-size: .9rem; } }
+@media (max-width: 600px) {
+  :root { --card-w: 80px; --card-h: 124px; }
+  nav { padding: 10px 14px; } .nav-title { font-size: 1.1rem; } .tab-btn { padding: 6px 14px; font-size: .82rem; }
+  .screen { padding: 16px 12px 80px; }
+  .draw-header h2 { font-size: 1.1rem; } .count-btn { width: 48px; height: 48px; font-size: 1rem; }
+  .question-box textarea { min-height: 72px; font-size: .88rem; }
+  .fan-area { height: 260px; margin-bottom: 4px; } .fan-instruction { font-size: .82rem; margin-top: -16px; }
+  .draw-action-btn { padding: 10px 28px; font-size: .9rem; }
+  .reading-cards { gap: 10px; } .reading-detail-header { padding: 14px 16px; } .card-name { font-size: 1.6rem; }
+  .reading-sections { padding: 14px 16px; } .section-text { font-size: .85rem; }
+  .ai-section-header, .chat-header { padding: 12px 14px; } .ai-body, .chat-messages { padding: 14px 14px; } .ai-text { font-size: .88rem; line-height: 1.85; }
+  .chat-input-row { padding: 10px 12px; } .chat-bubble { font-size: .85rem; }
+  .modal-card-row { gap: 14px; padding: 16px 16px 0; } .modal-img { width: 72px; height: 110px; } .modal-card-name { font-size: 1.7rem; } .modal-sections { padding: 12px 16px 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-title">☰ 易經塔羅</div>
+  <div class="nav-tabs">
+    <a class="tab-btn" href="index.html">瀏覽卦</a>
+    <a class="tab-btn active" href="draw.html">抽卦</a>
+  </div>
+</nav>
+
+<!-- Draw screen -->
+<div id="screen-draw" class="screen active">
+  <div class="draw-header">
+    <h2>抽卦</h2>
+    <p>靜心問卜，以誠感應</p>
+  </div>
+  <div class="count-selector">
+    <button class="count-btn active" data-count="1" onclick="setCount(1)">一卦</button>
+    <button class="count-btn"        data-count="2" onclick="setCount(2)">二卦</button>
+    <button class="count-btn"        data-count="3" onclick="setCount(3)">三卦</button>
+    <button class="count-btn"        data-count="4" onclick="setCount(4)">四卦</button>
+    <button class="count-btn"        data-count="5" onclick="setCount(5)">五卦</button>
+  </div>
+  <div class="count-desc">
+    <span class="cd-label">一卦：</span><span class="cd-text">針對一個問題，直接清晰</span>
+    <span class="cd-label">二卦：</span><span class="cd-text">比較兩個選項或兩種可能</span>
+    <span class="cd-label">三卦：</span><span class="cd-text">過去因由・現在處境・未來走向</span>
+    <span class="cd-label">四卦：</span><span class="cd-text">直指核心｜問題核心・障礙・對策・資源長處</span>
+    <span class="cd-label">五卦：</span><span class="cd-text">感情萬用｜我的狀態・我的態度・對方狀態・對方態度・可能結果</span>
+  </div>
+  <div class="question-box">
+    <label>你想問什麼？（可留空作整體運勢解讀）</label>
+    <textarea id="question-input" placeholder="例：我和他的感情發展如何？&#10;例：今年的事業運勢？&#10;例：最近遇到的困境應如何面對？"></textarea>
+  </div>
+  <div class="fan-area" id="fan-area"></div>
+  <div class="fan-instruction" id="fan-instruction"></div>
+  <button class="draw-action-btn" id="draw-action-btn" onclick="showReading()" style="display:none">查看卦義</button>
+</div>
+
+<!-- Reading screen -->
+<div id="screen-reading" class="screen">
+  <button class="back-btn" onclick="resetDraw()">← 重新抽卦</button>
+  <div class="reading-header">
+    <h2 id="reading-title">卦義解讀</h2>
+    <p  id="reading-subtitle"></p>
+  </div>
+  <div class="reading-cards" id="reading-cards"></div>
+  <div class="card-tabs"     id="card-tabs"></div>
+  <div id="reading-detail"></div>
+
+  <!-- AI interpretation -->
+  <div class="ai-section" id="ai-section" style="display:none">
+    <div class="ai-section-header">
+      <span class="ai-badge">AI</span>
+      <span class="ai-title">智能解卦</span>
+    </div>
+    <div class="ai-question" id="ai-question"></div>
+    <div class="ai-body"     id="ai-body"><div class="spinner"></div></div>
+  </div>
+
+  <!-- Follow-up chat -->
+  <div class="chat-section" id="chat-section" style="display:none">
+    <div class="chat-header">
+      <span class="ai-badge">AI</span>
+      <span class="chat-title">繼續追問</span>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="輸入追問，Enter 發送，Shift+Enter 換行…"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">發送</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal (card detail) -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-card-row">
+      <div class="modal-img" id="modal-img"></div>
+      <div>
+        <div class="modal-card-num"  id="modal-num"></div>
+        <div class="modal-card-name" id="modal-name"></div>
+      </div>
+    </div>
+    <div class="modal-sections" id="modal-sections"></div>
+  </div>
+</div>
+
+<script src="cards.js"></script>
+<script>
+// ── Config ────────────────────────────────────────────────────
+var SPREADS = {
+  1: { name: '單卦',         positions: ['卦象指引'] },
+  2: { name: '二選一',       positions: ['選項甲', '選項乙'] },
+  3: { name: '時間之流',     positions: ['過去因由', '現在處境', '未來走向'] },
+  4: { name: '直指核心',     positions: ['問題核心', '障礙', '對策', '資源／長處'] },
+  5: { name: '感情萬用牌陣', positions: ['我的狀態', '我對對方的感情態度', '對方的狀態', '對方對我的感情態度', '可能的結果'] }
+};
+
+var CLAUDE_API_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM';
+var CLAUDE_API     = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? '/proxy/claude' : 'https://xiaoai.plus/v1/messages';
+var CLAUDE_MODEL   = 'claude-sonnet-4-6';
+var BACK_IMGID     = '1DZsqnVI6lEVe9I9rLFWzYnNgSLwl7vyA';
+
+function imgUrl(fileId, size) {
+  if (typeof google !== 'undefined' && google.script)
+    return 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w' + (size || 400);
+  var card = CARDS.find(function(c) { return c.imgId === fileId; });
+  if (card) return 'images/' + card.num + '.jpg';
+  return 'images/back.jpg';
+}
+function backUrl() {
+  if (typeof google !== 'undefined' && google.script)
+    return 'https://drive.google.com/thumbnail?id=' + BACK_IMGID + '&sz=w400';
+  return 'images/back.jpg';
+}
+
+// ── API ───────────────────────────────────────────────────────
+function apiCall(messages) {
+  return fetch(CLAUDE_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 4000, messages: messages })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error.message);
+    var block = (data.content || []).find(function(b) { return b.type === 'text'; });
+    return block ? block.text : '（未能取得回覆）';
+  });
+}
+
+// ── State ─────────────────────────────────────────────────────
+var CARDS        = [];
+var drawCount    = 1;
+var drawState    = 'idle';
+var pickedNums   = [];
+var activeReadIdx = 0;
+var chatHistory  = []; // full conversation [{role, content}]
+
+// ── Boot ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  if (typeof CARDS_DATA !== 'undefined') { CARDS = CARDS_DATA; spreadFan(); }
+  else if (typeof google !== 'undefined' && google.script) {
+    google.script.run
+      .withSuccessHandler(function(data) { CARDS = data; spreadFan(); })
+      .getCardsData();
+  }
+  document.getElementById('chat-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+  });
+});
+
+// ── Draw ──────────────────────────────────────────────────────
+function setCount(n) {
+  drawCount = n;
+  document.querySelectorAll('.count-btn').forEach(function(b) { b.classList.toggle('active', parseInt(b.dataset.count) === n); });
+  spreadFan();
+}
+
+function spreadFan() {
+  drawState = 'spread'; pickedNums = [];
+  document.getElementById('draw-action-btn').style.display = 'none';
+  document.getElementById('screen-draw').classList.add('active');
+  document.getElementById('screen-reading').classList.remove('active');
+  var fanArea = document.getElementById('fan-area');
+  fanArea.innerHTML = '';
+  var vw = window.innerWidth;
+  var total  = vw < 600 ? 28 : vw < 900 ? 38 : 48;
+  var spread = vw < 600 ? 100 : vw < 900 ? 110 : 120;
+  var radius = vw < 600 ? 120 : vw < 900 ? 170 : 220;
+  var cw     = vw < 600 ?  48 : vw < 900 ?  60 :  72;
+  var start  = -spread / 2;
+  var step   = spread / (total - 1);
+  var pool = CARDS.map(function(c) { return c; });
+  shuffle(pool);
+  pool.slice(0, total).forEach(function(card, i) {
+    var deg = start + i * step;
+    var el  = document.createElement('div');
+    var orig = 'rotate(' + deg + 'deg) translateY(-' + radius + 'px)';
+    el.className = 'fan-card';
+    el.dataset.num = card.num;
+    el.dataset.origTransform = orig;
+    el.style.cssText = 'bottom:0;left:calc(50% - ' + (cw/2) + 'px);width:' + cw + 'px;height:' + Math.round(cw*1.56) + 'px;transform:' + orig + ';z-index:' + (i+1);
+    el.innerHTML = '<img src="' + backUrl() + '" alt="牌背">';
+    el.onclick = (function(el, num) { return function() { pickCard(el, num); }; })(el, card.num);
+    fanArea.appendChild(el);
+  });
+  document.getElementById('fan-instruction').textContent = '請選擇 ' + drawCount + ' 張牌';
+}
+
+function pickCard(el, num) {
+  if (drawState !== 'spread' && drawState !== 'done') return;
+  var idx = pickedNums.indexOf(num);
+  if (idx !== -1) {
+    pickedNums.splice(idx, 1);
+    el.classList.remove('selected');
+    el.style.transform = el.dataset.origTransform;
+    if (pickedNums.length < drawCount) document.getElementById('draw-action-btn').style.display = 'none';
+  } else {
+    if (pickedNums.length >= drawCount) return;
+    pickedNums.push(num);
+    el.classList.add('selected');
+    el.style.transform = 'translateY(-36px) ' + el.dataset.origTransform;
+  }
+  var remaining = drawCount - pickedNums.length;
+  if (pickedNums.length === drawCount) {
+    drawState = 'done';
+    document.getElementById('fan-instruction').textContent = '已選擇 ' + drawCount + ' 張牌，點擊「查看卦義」';
+    var btn = document.getElementById('draw-action-btn');
+    btn.textContent = '查看卦義'; btn.style.display = '';
+  } else {
+    drawState = 'spread';
+    document.getElementById('fan-instruction').textContent =
+      pickedNums.length === 0 ? '請選擇 ' + drawCount + ' 張牌' : '已選 ' + pickedNums.length + ' 張，還需 ' + remaining + ' 張';
+  }
+}
+
+function resetDraw() {
+  pickedNums = []; chatHistory = [];
+  document.getElementById('ai-section').style.display    = 'none';
+  document.getElementById('chat-section').style.display  = 'none';
+  document.getElementById('chat-messages').innerHTML     = '';
+  document.getElementById('draw-action-btn').style.display = 'none';
+  spreadFan();
+}
+
+// ── Reading ───────────────────────────────────────────────────
+function makeFlipWrap(c, idx, posLabel) {
+  var wrap = document.createElement('div');
+  wrap.style.textAlign = 'center';
+  var fc = document.createElement('div');
+  fc.className = 'flip-card';
+  fc.innerHTML = '<div class="flip-card-inner"><div class="flip-face flip-back"><img src="' + backUrl() + '" alt="牌背"></div><div class="flip-face flip-front"><img src="' + imgUrl(c.imgId, 600) + '" alt="' + c.name + '"></div></div>';
+  fc.onclick = (function(f, i) { return function() { f.classList.add('flipped'); setActiveReading(i); }; })(fc, idx);
+  var label = document.createElement('div');
+  label.className = 'flip-card-label';
+  label.innerHTML = (posLabel ? '<span style="color:var(--text-dim);font-size:.72rem;display:block;letter-spacing:.08em">' + posLabel + '</span>' : '') + '第 ' + c.num + ' 卦　' + c.name;
+  wrap.appendChild(fc); wrap.appendChild(label);
+  setTimeout(function(f) { f.classList.add('flipped'); }.bind(null, fc), 500 + idx * 350);
+  return wrap;
+}
+
+function showReading() {
+  document.getElementById('screen-draw').classList.remove('active');
+  document.getElementById('screen-reading').classList.add('active');
+  var cards  = pickedNums.map(function(n) { return CARDS[n-1]; });
+  var spread = SPREADS[drawCount] || SPREADS[1];
+  activeReadIdx = 0;
+  document.getElementById('reading-title').textContent    = spread.name === '單卦' ? '今日卦義' : spread.name;
+  document.getElementById('reading-subtitle').textContent = cards.map(function(c) { return c.name; }).join(' · ');
+
+  // Card layout
+  var fcWraps = cards.map(function(c, i) { return makeFlipWrap(c, i, spread.positions[i] || ''); });
+  var cardsEl = document.getElementById('reading-cards');
+  cardsEl.innerHTML = ''; cardsEl.removeAttribute('style');
+  if (drawCount === 4) {
+    cardsEl.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;margin-bottom:32px';
+    cardsEl.appendChild(fcWraps[0]);
+    var r4 = document.createElement('div'); r4.style.cssText = 'display:flex;gap:16px;align-items:flex-start';
+    [fcWraps[1], fcWraps[2], fcWraps[3]].forEach(function(w) { r4.appendChild(w); });
+    cardsEl.appendChild(r4);
+  } else if (drawCount === 5) {
+    cardsEl.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;margin-bottom:32px';
+    var r5 = document.createElement('div'); r5.style.cssText = 'display:flex;gap:12px;align-items:flex-start';
+    r5.appendChild(fcWraps[0]); r5.appendChild(fcWraps[1]);
+    var arr = document.createElement('div'); arr.style.cssText = 'display:flex;align-items:center;color:var(--text-dim);font-size:1rem;padding:0 6px;margin-top:48px'; arr.textContent = '→←';
+    r5.appendChild(arr); r5.appendChild(fcWraps[2]); r5.appendChild(fcWraps[3]);
+    cardsEl.appendChild(r5); cardsEl.appendChild(fcWraps[4]);
+  } else {
+    cardsEl.style.cssText = 'display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:32px';
+    fcWraps.forEach(function(w) { cardsEl.appendChild(w); });
+  }
+
+  // Tabs
+  var tabsEl = document.getElementById('card-tabs'); tabsEl.innerHTML = '';
+  if (cards.length > 1) {
+    cards.forEach(function(c, i) {
+      var pos = spread.positions[i] ? spread.positions[i] + '：' : '';
+      var btn = document.createElement('button');
+      btn.className = 'card-tab' + (i === 0 ? ' active' : '');
+      btn.textContent = pos + c.name;
+      btn.onclick = (function(idx) { return function() { setActiveReading(idx); }; })(i);
+      tabsEl.appendChild(btn);
+    });
+  }
+  renderReadingDetail(cards[0]);
+
+  // AI
+  var question = document.getElementById('question-input').value;
+  var aiSection = document.getElementById('ai-section');
+  aiSection.style.display = '';
+  document.getElementById('ai-question').textContent = question.trim() ? '問：' + question.trim() : '整體運勢解讀';
+  var aiBody = document.getElementById('ai-body');
+  aiBody.innerHTML = '<div class="spinner"></div>';
+
+  // Build initial prompt
+  var cardLines = cards.map(function(c, i) {
+    var pos = spread.positions[i] ? '【' + spread.positions[i] + '】' : '第' + (i+1) + '張';
+    return pos + ' 第' + c.num + '卦《' + c.name + '》\n基礎牌義：' + c.lvl1 + '\n戀愛運勢：' + c.lvl2 + '\n職場財運性格：' + c.lvl3;
+  }).join('\n\n');
+  var prompt = '你係一位精通易經塔羅嘅占卜師，請用繁體中文（香港口語書寫）為用戶解讀卦象。\n\n' +
+    '牌陣：' + spread.name + '\n用戶問題：' + (question.trim() || '（無特定問題，請作整體運勢解讀）') + '\n\n' +
+    '抽到嘅卦象：\n' + cardLines + '\n\n' +
+    '請根據「' + spread.name + '」牌陣嘅結構，針對用戶嘅問題，結合各個位置嘅卦象作出詳細解讀。包括：\n' +
+    '1. 各位置卦象分析（按牌陣位置逐一解說）\n2. 針對問題嘅整體指引\n3. 建議或注意事項\n\n語氣輕鬆易明，貼近香港日常用語，唔好太學術化。';
+
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-section').style.display = 'none';
+
+  apiCall([{ role: 'user', content: prompt }])
+    .then(function(text) {
+      aiBody.innerHTML = '<div class="ai-text">' + mdToHtml(text) + '</div>';
+      // Seed conversation with the reading exchange
+      chatHistory = [{ role: 'user', content: prompt }, { role: 'assistant', content: text }];
+      document.getElementById('chat-section').style.display = '';
+    })
+    .catch(function(err) {
+      aiBody.innerHTML = '<div class="ai-text" style="color:var(--text-dim)">解讀失敗：' + err.message + '</div>';
+    });
+}
+
+function setActiveReading(idx) {
+  activeReadIdx = idx;
+  document.querySelectorAll('.card-tab').forEach(function(b, i) { b.classList.toggle('active', i === idx); });
+  renderReadingDetail(CARDS[pickedNums[idx]-1]);
+}
+
+function renderReadingDetail(c) {
+  document.getElementById('reading-detail').innerHTML =
+    '<div class="reading-detail"><div class="reading-detail-header"><div class="card-num">第 ' + c.num + ' 卦</div><div class="card-name">' + c.name + '</div></div>' +
+    '<div class="reading-sections">' + readingSections(c) + '</div></div>';
+}
+
+function readingSections(c) {
+  return section('基礎牌義', 'lvl1', c.lvl1) + section('戀愛運勢', 'lvl2', c.lvl2) + section('職場・財運・性格', 'lvl3', c.lvl3);
+}
+
+function section(label, cls, text) {
+  return '<div class="reading-section"><span class="section-tag tag-' + cls + '">' + label + '</span><div class="section-text">' + text + '</div></div>';
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+function sendChatMessage() {
+  var input  = document.getElementById('chat-input');
+  var msg    = input.value.trim();
+  if (!msg || chatHistory.length === 0) return;
+  input.value = '';
+  input.style.height = '52px';
+
+  chatHistory.push({ role: 'user', content: msg });
+  addBubble('user', escHtml(msg));
+
+  var sendBtn = document.getElementById('chat-send-btn');
+  sendBtn.disabled = true;
+  var thinkId = 'b' + Date.now();
+  addBubble('assistant', '<div class="spinner" style="width:22px;height:22px;margin:4px auto 0"></div>', thinkId);
+
+  apiCall(chatHistory)
+    .then(function(text) {
+      var el = document.getElementById(thinkId);
+      el.innerHTML = mdToHtml(text);
+      chatHistory.push({ role: 'assistant', content: text });
+      sendBtn.disabled = false;
+    })
+    .catch(function(err) {
+      var el = document.getElementById(thinkId);
+      el.innerHTML = '<span style="color:var(--text-dim)">錯誤：' + err.message + '</span>';
+      chatHistory.pop();
+      sendBtn.disabled = false;
+    });
+}
+
+function addBubble(role, html, id) {
+  var msgs = document.getElementById('chat-messages');
+  var div  = document.createElement('div');
+  div.className = 'chat-bubble ' + role;
+  if (id) div.id = id;
+  div.innerHTML = html;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+// ── Modal ─────────────────────────────────────────────────────
+function openModal(num) {
+  var c = CARDS[num-1];
+  document.getElementById('modal-num').textContent  = '第 ' + num + ' 卦';
+  document.getElementById('modal-name').textContent = c.name;
+  document.getElementById('modal-img').innerHTML    = '<img src="' + imgUrl(c.imgId, 600) + '" alt="' + c.name + '">';
+  document.getElementById('modal-sections').innerHTML = readingSections(c);
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal') || e.currentTarget.tagName === 'BUTTON')
+    document.getElementById('modal').classList.remove('open');
+}
+
+// ── Markdown → HTML ───────────────────────────────────────────
+function mdToHtml(md) {
+  var h = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h = h.replace(/^### (.+)$/gm,'<h4 style="color:var(--gold-lt);margin:1em 0 .3em">$1</h4>');
+  h = h.replace(/^## (.+)$/gm, '<h3 style="color:var(--gold);margin:1.1em 0 .3em">$1</h3>');
+  h = h.replace(/^# (.+)$/gm,  '<h2 style="color:var(--gold);margin:1.2em 0 .4em">$1</h2>');
+  h = h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h = h.replace(/((?:^[*\-] .+\n?)+)/gm, function(b) {
+    return '<ul style="margin:.4em 0 .4em 1.4em;line-height:2">' + b.trim().split('\n').map(function(l){ return '<li>'+l.replace(/^[*\-] /,'')+'</li>'; }).join('') + '</ul>';
+  });
+  h = h.replace(/((?:^\d+\. .+\n?)+)/gm, function(b) {
+    return '<ol style="margin:.4em 0 .4em 1.4em;line-height:2">' + b.trim().split('\n').map(function(l){ return '<li>'+l.replace(/^\d+\. /,'')+'</li>'; }).join('') + '</ol>';
+  });
+  h = h.replace(/\n{2,}/g,'</p><p style="margin:.6em 0">').replace(/\n/g,'<br>');
+  return '<p style="margin:0">' + h + '</p>';
+}
+
+function shuffle(arr) {
+  for (var i = arr.length-1; i > 0; i--) { var j = Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+}
+</script>
+<footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
+  v1.2.0 &nbsp;·&nbsp; 2026-05-17 10:00
+</footer>
+</body>
+</html>
