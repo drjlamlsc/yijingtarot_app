@@ -256,8 +256,8 @@ var SPREADS = {
 
 var CLAUDE_API_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM';
 var CLAUDE_API     = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? '/proxy/claude' : 'https://xiaoai.plus/v1/chat/completions';
-var CLAUDE_MODEL   = 'deepseek-v4-flash';
+  ? '/proxy/claude' : 'https://xiaoai.plus/v1/messages';
+var CLAUDE_MODEL   = 'claude-sonnet-4-6';
 var BACK_IMGID     = '1DZsqnVI6lEVe9I9rLFWzYnNgSLwl7vyA';
 
 function imgUrl(fileId, size) {
@@ -277,14 +277,14 @@ function backUrl() {
 function apiCall(messages) {
   return fetch(CLAUDE_API, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CLAUDE_API_KEY },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_API_KEY, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 4000, messages: messages })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-    var choice = (data.choices || [])[0];
-    return choice ? choice.message.content : '（未能取得回覆）';
+    if (data.error) throw new Error(data.error.message);
+    var block = (data.content || []).find(function(b) { return b.type === 'text'; });
+    return block ? block.text : '（未能取得回覆）';
   });
 }
 
