@@ -14,14 +14,12 @@ exports.handler = async function(event) {
   }
 
   try {
-    const resp = await fetch('https://xiaoai.plus/v1/chat/completions', {
+    const resp = await fetch('https://xiaoai.plus/v1/messages', {
       method: 'POST',
       headers: {
-        'Content-Type':  'application/json',
-        'Authorization': event.headers['authorization'] || '',
-        'User-Agent':    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept':        'application/json',
-        'Origin':        'https://xiaoai.plus',
+        'Content-Type':      'application/json',
+        'x-api-key':         event.headers['authorization']?.replace('Bearer ', '') || '',
+        'anthropic-version': '2023-06-01',
       },
       body: event.body,
     });
