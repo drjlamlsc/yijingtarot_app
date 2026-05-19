@@ -19,22 +19,11 @@ exports.handler = async function(event) {
       headers: {
         'Content-Type':  'application/json',
         'Authorization': event.headers['authorization'] || '',
-        'User-Agent':    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept':        'application/json',
-        'Origin':        'https://xiaoai.plus',
       },
       body: event.body,
     });
 
     const data = await resp.text();
-    // Include upstream status in body if error, for debugging
-    if (!resp.ok) {
-      return {
-        statusCode: resp.status,
-        headers: { 'Content-Type': 'application/json', ...CORS },
-        body: JSON.stringify({ error: { message: 'Upstream ' + resp.status + ': ' + data } }),
-      };
-    }
     return {
       statusCode: resp.status,
       headers: { 'Content-Type': 'application/json', ...CORS },
