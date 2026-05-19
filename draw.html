@@ -284,7 +284,8 @@ function apiCall(messages) {
   .then(function(data) {
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     var choice = (data.choices || [])[0];
-    return choice ? choice.message.content : '（未能取得回覆）';
+    if (!choice) throw new Error('空回覆：' + JSON.stringify(data));
+    return choice.message.content || '（未能取得回覆）';
   });
 }
 
@@ -580,7 +581,7 @@ function shuffle(arr) {
 }
 </script>
 <footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
-  v1.3.1 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
+  v1.3.2 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
 </footer>
 </body>
 </html>
