@@ -13,7 +13,7 @@ PORT       = 8080
 DIR        = os.path.dirname(os.path.abspath(__file__))
 CLAUDE_KEY = 'sk-W3iFOmFHkaXd63EewBuKyAaDmgQDrItDzH5I2DqvrY7NK6UM'
 CLAUDE_HOST = 'xiaoai.plus'
-CLAUDE_PATH = '/v1/messages'
+CLAUDE_PATH = '/v1/chat/completions'
 
 MIME = {
     '.html':  'text/html; charset=utf-8',
@@ -73,10 +73,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             ctx  = ssl._create_unverified_context()
             conn = http.client.HTTPSConnection(CLAUDE_HOST, context=ctx, timeout=120)
             conn.request('POST', CLAUDE_PATH, body=body, headers={
-                'Content-Type':      'application/json',
-                'x-api-key':         CLAUDE_KEY,
-                'anthropic-version': '2023-06-01',
-                'Content-Length':    str(len(body)),
+                'Content-Type':   'application/json',
+                'Authorization':  'Bearer ' + CLAUDE_KEY,
+                'Content-Length': str(len(body)),
             })
             resp   = conn.getresponse()
             data   = resp.read()
