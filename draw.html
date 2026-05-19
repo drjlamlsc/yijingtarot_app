@@ -278,7 +278,7 @@ function apiCall(messages) {
   return fetch(CLAUDE_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CLAUDE_API_KEY },
-    body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 2000, stream: false, messages: messages })
+    body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 4000, stream: false, messages: messages })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -581,7 +581,7 @@ function shuffle(arr) {
 }
 </script>
 <footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
-  v1.3.3 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
+  v1.3.2 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
 </footer>
 </body>
 </html>
