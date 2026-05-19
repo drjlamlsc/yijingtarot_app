@@ -456,8 +456,8 @@ function showReading() {
   // Build initial prompt
   var cardLines = cards.map(function(c, i) {
     var pos = spread.positions[i] ? '【' + spread.positions[i] + '】' : '第' + (i+1) + '張';
-    return pos + ' 第' + c.num + '卦《' + c.name + '》';
-  }).join('\n');
+    return pos + ' 第' + c.num + '卦《' + c.name + '》\n基礎牌義：' + c.lvl1 + '\n戀愛運勢：' + c.lvl2 + '\n職場財運性格：' + c.lvl3;
+  }).join('\n\n');
   var prompt = '你係一位精通易經塔羅嘅占卜師，請用繁體中文（香港口語書寫）為用戶解讀卦象。\n\n' +
     '牌陣：' + spread.name + '\n用戶問題：' + (question.trim() || '（無特定問題，請作整體運勢解讀）') + '\n\n' +
     '抽到嘅卦象：\n' + cardLines + '\n\n' +
@@ -581,7 +581,7 @@ function shuffle(arr) {
 }
 </script>
 <footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
-  v1.3.4 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
+  v1.3.3 &nbsp;·&nbsp; 2026-05-19 &nbsp;·&nbsp; GPT-5.5
 </footer>
 </body>
 </html>
