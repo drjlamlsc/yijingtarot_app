@@ -274,13 +274,19 @@ function backUrl() {
 }
 
 // ── API ───────────────────────────────────────────────────────
-function apiCall(messages) {
+function apiCall(messages, maxTokens) {
   return fetch(CLAUDE_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CLAUDE_API_KEY },
-    body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: 4000, messages: messages })
+    body: JSON.stringify({ model: CLAUDE_MODEL, max_tokens: maxTokens || 4000, messages: messages })
   })
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    var ct = r.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+      return r.text().then(function(t) { throw new Error('伺服器錯誤: ' + t.substring(0, 120)); });
+    }
+    return r.json();
+  })
   .then(function(data) {
     if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
     var block = (data.content || []).find(function(b) { return b.type === 'text'; });
@@ -467,7 +473,8 @@ function showReading() {
   document.getElementById('chat-messages').innerHTML = '';
   document.getElementById('chat-section').style.display = 'none';
 
-  apiCall([{ role: 'user', content: prompt }])
+  var maxTok = Math.max(800, 2200 - cards.length * 300); // fewer cards = more detail
+  apiCall([{ role: 'user', content: prompt }], maxTok)
     .then(function(text) {
       aiBody.innerHTML = '<div class="ai-text">' + mdToHtml(text) + '</div>';
       // Seed conversation with the reading exchange
@@ -580,7 +587,7 @@ function shuffle(arr) {
 }
 </script>
 <footer style="text-align:center;padding:24px 0 32px;color:var(--text-dim);font-size:.7rem;letter-spacing:.12em;opacity:.5">
-  v1.3.7 &nbsp;·&nbsp; 2026-05-19
+  v1.3.8 &nbsp;·&nbsp; 2026-05-19
 </footer>
 </body>
 </html>
